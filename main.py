@@ -6,8 +6,6 @@ from datetime import datetime
 
 from custom_cogs import GeneralCog, GameCog # for the custom cogs
 
-from tictactoe import TicTacToe # that's my class to manage the game
-
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -31,7 +29,6 @@ class Bot(commands.Bot):
         """ This method is called when the bot is ready """
         async def on_ready(self):
             print(f'Bot is online - {datetime.today().strftime("Date %Y-%m-%d | Time %H:%M:%S ( Server Datetime ) ")}')
-            TicTacToe(1, 2)
 
         """ This method is called when any user sends a message """
         async def on_message(self, message):

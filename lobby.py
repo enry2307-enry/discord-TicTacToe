@@ -17,5 +17,15 @@ class Lobby:
     def get_player(self, index):
         return self.players[0]
 
+    def is_userid_in_lobby(self, id: int):
+        result = False
+        for p in self.players:
+            if p.id == id:
+                result = True
+        return result
+
     def size(self):
         return len(self.players)
+
+    def empty(self):
+        self.players = []
