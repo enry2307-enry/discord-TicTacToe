@@ -3,7 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Greedy
 
-from tictactoe import TicTacToe
+from tictactoe2 import TicTacToe
+from player import Player
+from lobby import Lobby
 
 from sync import sync as default_sync
 
@@ -30,7 +32,12 @@ class GameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.game = None
-        self.lobby = []
+        self.lobby = Lobby()
+
+        self.signs = [
+            ':negative_squared_cross_mark:',
+            ':o:'
+        ]
 
     @commands.command(name="join")
     async def join(self, ctx):
@@ -44,19 +51,30 @@ class GameCog(commands.Cog):
 
         await ctx.send(f'{ctx.author.id} joined the lobby')
         self.lobby.append(ctx.author.id)
-        if len(self.lobby) == 2:
-            self.game = TicTacToe(
-                id1=self.lobby[0],
-                id2=self.lobby[1],
-                sign1=':negative_squared_cross_mark:',
-                sign2=':o2:',
-                empty_board=[':one:', ':two:', ':three:', ':four:',
-                             ':five:', ':six:', ':seven:', ':eight:', ':nine:']
+        self.lobby.add(
+            Player(
+                ctx.author.id,
+                sign=self.signs[self.lobby.size()]
             )
-            await ctx.send(f'Game is started! \n{self.game.get_board_formatted_string()}')
+        )
+
+        # if lobby is not ready just exit
+        if not self.lobby.is_ready():
+            return
+
+        # if code goes here it means game is ready, we can start it
+        self.game = TicTacToe(
+            self.lobby,
+            empty_board=[':one:', ':two:', ':three:', ':four:',
+                         ':five:', ':six:', ':seven:', ':eight:', ':nine:']
+        )
+        await ctx.send(f'Game is started! \n{self.game.get_board_formatted_string()}')
 
     @commands.command(name="lobby")
     async def lobby(self, ctx):
+
+        # riscrivi questo utilizzando la classe lobby
+        """
         if len(self.lobby) > 0:
             output = "Lobby:\n"
             for userid in self.lobby:
@@ -65,10 +83,15 @@ class GameCog(commands.Cog):
             await ctx.send(output)
         else:
             await ctx.send("Lobby is empty, join a new one!")
-
+        """
 
     @commands.command(name="move")
     async def move(self, ctx, position):
-        position = int(position) - 1 # we fix the array offset
+        position = int(position) - 1  # we fix the array offset
         self.game.move(position)
+
+        if self.game.winner:
+            discord_winner = self.bot.get_user(self.game.winner.id)
+            await ctx.send(f'{discord_winner} won the game!')
+            
         await ctx.send(self.game.get_board_formatted_string())
