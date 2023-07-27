@@ -41,7 +41,7 @@ class GameCog(commands.Cog):
 
     @commands.command(name="join")
     async def join(self, ctx, id=None):
-        if self.lobby.is_userid_in_lobby(ctx.author.id):
+        if self.lobby.is_user_in_lobby(ctx.author):
             embed = discord.Embed(title="You already are in the lobby!",
                                   description="Wait for someone to join you!",
                                   color=self.bot.colors['warning'])
@@ -54,12 +54,13 @@ class GameCog(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        user = self.bot.get_user(ctx.author.id)
-        await ctx.send(f'{user} joined the lobby')
+        user = ctx.author
+        embed = discord.Embed(title=f"**{user}** joined the lobby!", color=0xba5e5e)
+        await ctx.send(embed=embed)
 
         self.lobby.add(
             Player(
-                user.id,
+                user,
                 sign=self.signs[self.lobby.size()]
             )
         )
@@ -74,14 +75,22 @@ class GameCog(commands.Cog):
             empty_board=[':one:', ':two:', ':three:', ':four:',
                          ':five:', ':six:', ':seven:', ':eight:', ':nine:']
         )
-        await ctx.send(f'Game is started! \n{self.game.get_board_formatted_string()}')
+        embed = discord.Embed(title="Game is started!",
+                              description="These are the rivals", color=self.bot.colors['success'])
+
+        players = self.lobby.get_players()
+        embed.add_field(name=self.players[0], value="", inline=True)
+        embed.add_field(name=self.players[1], value="", inline=True)
+        await ctx.send(embed=embed)
         await ctx.send(f'{self.bot.get_user(self.game.get_player_turn().id)}\'s turn')
 
     @commands.command(name="lobby")
     async def lobby(self, ctx):
         # if lobby is empty we can go back
         if self.lobby.is_empty():
-            await ctx.send("Lobby is empty, join a new one!")
+            embed = discord.Embed(title="Lobby is empty!",
+                                  description="Join a new one.", color=self.bot.colors['warning'])
+            await ctx.send(embed=embed)
             return
 
         players = self.lobby.get_players()
@@ -89,8 +98,7 @@ class GameCog(commands.Cog):
                               description="The players currently inside the lobby are as follows!",
                               color=self.bot.colors['success'])
         for i, p in enumerate(players):
-            discord_user = self.bot.get_user(p.id)
-            embed.add_field(name=f"Player #{i+1}", value=f"{discord_user.name}", inline=False)
+            embed.add_field(name=f"Player #{i+1}", value=f"{p.name}", inline=False)
 
         await ctx.send(embed=embed)
 
@@ -102,16 +110,15 @@ class GameCog(commands.Cog):
             return
 
         # only the player with turn is supposed to have the rights to play
-        if not self.game.is_player_turn(ctx.author.id):
-            await ctx.send('Non è il tuo turno')
+        if not self.game.is_player_turn(ctx.author):
+            await ctx.send('It\'s not your turn')
             return
 
         position = int(position) - 1  # we fix the array offset
         self.game.move(position)
 
         if self.game.winner:
-            discord_winner = self.bot.get_user(self.game.winner.id)
-            await ctx.send(f'{discord_winner} won the game!')
+            await ctx.send(f'{self.game.winner} won the game!')
 
         if self.game.draw:
             await ctx.send('DRAW')
@@ -123,12 +130,12 @@ class GameCog(commands.Cog):
             self.end_game()
             return
 
-        await ctx.send(f'{self.bot.get_user(self.game.get_player_turn().id)}\'s turn')
+        await ctx.send(f'{self.game.get_player_turn()}\'s turn')
 
     @commands.command(name="quit")
     async def quit(self, ctx):
         # user can quit the lobby only if he is in it
-        if self.lobby.is_userid_in_lobby(ctx.author.id):
+        if self.lobby.is_userid_in_lobby(ctx.author):
             await ctx.send('sei scito')
             self.end_game()
 
