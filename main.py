@@ -10,29 +10,30 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-""" Extending bot's class """
+
 class Bot(commands.Bot):
-        def __init__(self, command_prefix, intents, self_bot=False):
-            commands.Bot.__init__(self, command_prefix=command_prefix, intents=intents, self_bot=self_bot)
-            self.colors = {
-                'white': 0xffffff,
-                'success': 0x4dff00,
-                'fail': 0xff0000,
-                'warning': 0xffdd00
-            }
+    def __init__(self, command_prefix, intents, self_bot=False):
+        commands.Bot.__init__(self, command_prefix=command_prefix, intents=intents, self_bot=self_bot)
+        self.colors = {
+            'white': 0xffffff,
+            'success': 0x4dff00,
+            'fail': 0xff0000,
+            'warning': 0xffdd00
+        }
 
-        """ Overriding this method allows to add cogs """
-        async def setup_hook(self):
-            await self.add_cog(GeneralCog(self))
-            await self.add_cog(GameCog(self))
+    """ Overriding this method allows to add cogs """
+    async def setup_hook(self):
+        await self.add_cog(GeneralCog(self))
+        await self.add_cog(GameCog(self))
 
-        """ This method is called when the bot is ready """
-        async def on_ready(self):
-            print(f'Bot is online - {datetime.today().strftime("Date %Y-%m-%d | Time %H:%M:%S ( Server Datetime ) ")}')
+    """ This method is called when the bot is ready """
+    async def on_ready(self):
+        print(f'Bot is online - {datetime.today().strftime("Date %Y-%m-%d | Time %H:%M:%S ( Server Datetime ) ")}')
 
-        """ This method is called when any user sends a message """
-        async def on_message(self, message):
-            await self.process_commands(message)
+    """ This method is called when any user sends a message """
+    async def on_message(self, message):
+        await self.process_commands(message)
+
 
 bot = Bot(command_prefix="!", intents=intents)
 bot.run("MTEzMTEzNDE5ODM1NTMzNzIyNg.GqDR3u.l3cdzlr1kpvfuCv_MqHdjoLYtV8xgu3gLXiZYA")

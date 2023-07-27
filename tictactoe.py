@@ -1,4 +1,5 @@
 import random
+import datetime
 
 
 class TicTacToe:
@@ -7,6 +8,8 @@ class TicTacToe:
             empty_board = ['', '', '', '', '', '', '', '', '']
         self.board = empty_board  # we need 9 slots for the board
         self.executed_moves = 0  # counts the number of executed moves
+
+        self.creation_datetime = datetime.datetime.now()
 
         # Stores the players
         self.players = lobby.get_players()
