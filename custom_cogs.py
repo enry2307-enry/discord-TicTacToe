@@ -9,6 +9,7 @@ from lobby import Lobby
 
 from sync import sync as default_sync
 
+
 class GeneralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -41,8 +42,8 @@ class GameCog(commands.Cog):
 
     @commands.command(name="join")
     async def join(self, ctx, id=None):
-        if self.lobby.is_user_in_lobby(ctx.author):
-            embed = discord.Embed(title="You already are in the lobby!",
+        if self.lobby.is_user_in_lobby(ctx.author) and not id:
+            embed = discord.Embed(title="You are already in the lobby!",
                                   description="Wait for someone to join you!",
                                   color=self.bot.colors['warning'])
             await ctx.send(embed=embed)
@@ -55,7 +56,10 @@ class GameCog(commands.Cog):
             return
 
         user = ctx.author
-        embed = discord.Embed(title=f"**{user}** joined the lobby!", color=0xba5e5e)
+        if id:
+            print('here')
+            user = self.bot.get_user(int(id))
+        embed = discord.Embed(title=f"***{user}*** joined the lobby!", color=self.bot.colors['success'])
         await ctx.send(embed=embed)
 
         self.lobby.add(
@@ -75,14 +79,22 @@ class GameCog(commands.Cog):
             empty_board=[':one:', ':two:', ':three:', ':four:',
                          ':five:', ':six:', ':seven:', ':eight:', ':nine:']
         )
+
+        # We prepare to print the start of the game
         embed = discord.Embed(title="Game is started!",
                               description="These are the rivals", color=self.bot.colors['success'])
 
+        # We insert the players inside the embed
         players = self.lobby.get_players()
-        embed.add_field(name=self.players[0], value="", inline=True)
-        embed.add_field(name=self.players[1], value="", inline=True)
+        embed.add_field(name=str(players[0].user), value=players[0].sign, inline=True)
+        embed.add_field(name=str(players[1].user), value=players[1].sign, inline=True)
+
         await ctx.send(embed=embed)
-        await ctx.send(f'{self.bot.get_user(self.game.get_player_turn().id)}\'s turn')
+
+        embed = discord.Embed(title="Board", color=self.bot.colors['success'])
+        embed.set_author(name=f"{self.game.get_player_turn().user}'s turn")
+        await ctx.send(embed=embed)
+        await ctx.send(self.game.get_board_formatted_string())
 
     @commands.command(name="lobby")
     async def lobby(self, ctx):
@@ -98,7 +110,8 @@ class GameCog(commands.Cog):
                               description="The players currently inside the lobby are as follows!",
                               color=self.bot.colors['success'])
         for i, p in enumerate(players):
-            embed.add_field(name=f"Player #{i+1}", value=f"{p.name}", inline=False)
+
+            embed.add_field(name=f"Player #{i+1}", value=f"{p.user.name}", inline=False)
 
         await ctx.send(embed=embed)
 
@@ -110,7 +123,7 @@ class GameCog(commands.Cog):
             return
 
         # only the player with turn is supposed to have the rights to play
-        if not self.game.is_player_turn(ctx.author):
+        if not self.game.is_user_turn(ctx.author):
             await ctx.send('It\'s not your turn')
             return
 
@@ -130,15 +143,24 @@ class GameCog(commands.Cog):
             self.end_game()
             return
 
-        await ctx.send(f'{self.game.get_player_turn()}\'s turn')
+        embed = discord.Embed(title=f"{self.game.get_player_turn().user}'s turn", color=self.bot.colors['success'])
+        await ctx.send(embed=embed)
 
     @commands.command(name="quit")
     async def quit(self, ctx):
         # user can quit the lobby only if he is in it
-        if self.lobby.is_userid_in_lobby(ctx.author):
-            await ctx.send('sei scito')
+        if self.lobby.is_user_in_lobby(ctx.author):
             self.end_game()
 
+            embed = discord.Embed(title="You quit the lobby", color=self.bot.colors['success'])
+            await ctx.send(embed=embed)
+        else:
+            embed = discord.Embed(title="You are not in any lobby", color=self.bot.colors['warning'])
+            await ctx.send(embed=embed)
+
+    """
+        FUNCTIONS
+    """
     def end_game(self):
         self.game = None
         self.lobby.empty()

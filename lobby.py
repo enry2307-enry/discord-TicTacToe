@@ -18,12 +18,13 @@ class Lobby:
         return self.players[0]
 
     def is_user_in_lobby(self, user):
-        """result = False
+        result = False
         for p in self.players:
-            if p.id == id:
+            if p.user == user:
                 result = True
-        return result"""
-        return True if user in self.players else False
+                break
+
+        return result
 
     def size(self):
         return len(self.players)

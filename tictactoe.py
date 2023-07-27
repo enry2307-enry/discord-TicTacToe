@@ -6,17 +6,23 @@ class TicTacToe:
         if empty_board is None:
             empty_board = ['', '', '', '', '', '', '', '', '']
         self.board = empty_board  # we need 9 slots for the board
-        self.executed_moves = 0
+        self.executed_moves = 0  # counts the number of executed moves
 
+        # Stores the players
         self.players = lobby.get_players()
 
+        # Stores the signs of the players
         self.signs = [self.players[0].sign, self.players[1].sign]
 
         self.turn = random.randint(0, 1)  # stores the index of the current player chosen randomly
 
-        self.winner = None  # we store the winning Player. If NONE there is no winner at that moment
-        self.draw = False
+        """ STOPPING CONDITIONS"""
+        # This variable just stores if the game is ended
         self.end = False
+
+        # These variables basically contains the results of the game
+        self.winner = None  # Stores the winner
+        self.draw = False  # Changes to True if the game ends in draw
 
     def __get_turn_sign(self):
         return self.players[self.turn].sign
@@ -27,17 +33,19 @@ class TicTacToe:
     def get_player_from_sign(self, sign):
         return self.players[0] if self.players[0].sign == sign else self.players[1]
 
-    def is_player_turn(self, id):
-        return True if self.get_player_turn().id == id else False
+    def is_user_turn(self, user):
+        return True if self.get_player_turn().user == user else False
+
+    def is_board_cell_empty(self, position):
+        return False if self.board[position] in self.signs else True
 
     def move(self, position):
         # This lambda checks if the corresponding "p" cell is taken up
         # by any sign inside self.signs
-        is_board_cell_empty = lambda p: False if self.board[p] in self.signs else True
         player = self.get_player_turn()
 
         # if the cell is not empty we cannot perform the move
-        if not is_board_cell_empty(position):
+        if not self.is_board_cell_empty(position):
             return False
 
         # we execute the move.
@@ -67,7 +75,7 @@ class TicTacToe:
     def get_winner_if_win(self):
         sign = self.__get_turn_sign()  # we check the win for the current sign
 
-        # array to store winning combinations
+        # array to store the cell's winning combinations
         WINNING_C = [
             [0, 1, 2],
             [3, 4, 5],
@@ -96,10 +104,12 @@ class TicTacToe:
             winner = self.get_player_from_sign(sign)
         return winner
 
+    # We use this function to debug the board
     def raw_print_board(self):
         print(self.board)
 
-    def get_board_formatted_string(self):
+    # We use this function to return the formatted string of the board
+    def get_board_formatted_string(self) -> str:
         res = ''
         for i, s in enumerate(self.board):
             if i % 3 == 0:
