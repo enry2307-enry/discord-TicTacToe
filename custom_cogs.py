@@ -46,8 +46,8 @@ class GameCog(commands.Cog):
         ]
 
     @commands.command(name="join")
-    async def join(self, ctx, id=None):
-        if self.lobby.is_user_in_lobby(ctx.author) and not id:
+    async def join(self, ctx, id_=None):
+        if self.lobby.is_user_in_lobby(ctx.author) and not id_:
             embed = discord.Embed(title="You are already in the lobby!",
                                   description="Wait for someone to join you!",
                                   color=self.bot.colors['warning'])
@@ -61,8 +61,8 @@ class GameCog(commands.Cog):
             return
 
         user = ctx.author
-        if id:
-            user = self.bot.get_user(int(id))
+        if id_:
+            user = self.bot.get_user(int(id_))
         embed = discord.Embed(title=f"***{user}*** joined the lobby!", color=self.bot.colors['success'])
         await ctx.send(embed=embed)
 
@@ -128,6 +128,7 @@ class GameCog(commands.Cog):
             return
 
         # only the player with turn is supposed to have the rights to play
+        # uncomment these lines to avoid EVERYONE moving on the board
         """if not self.game.is_user_turn(ctx.author):
             embed = discord.Embed(title=f"It's not your turn!", color=self.bot.colors['fail'])
             await ctx.send(embed=embed)
@@ -180,8 +181,6 @@ class GameCog(commands.Cog):
             pass
             # qua metti end game
             # poi devi fare che SIA le lobby che i game possono essere fatti in un SOLO canale alla volta
-
-
 
     """
         FUNCTIONS

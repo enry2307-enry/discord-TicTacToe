@@ -2,18 +2,14 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-# from typing import Literal, Optional # may be useful
+# from typing import Literal, Optional  # may be useful
 
-from custom_cogs import GeneralCog, GameCog # for the custom cogs
-
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
+from custom_cogs import GeneralCog, GameCog  # for the custom cogs
 
 
 class Bot(commands.Bot):
-    def __init__(self, command_prefix, intents, self_bot=False):
-        commands.Bot.__init__(self, command_prefix=command_prefix, intents=intents, self_bot=self_bot)
+    def __init__(self, command_prefix, intents_, self_bot=False):
+        commands.Bot.__init__(self, command_prefix=command_prefix, intents=intents_, self_bot=self_bot)
         self.colors = {
             'white': 0xffffff,
             'success': 0x4dff00,
@@ -32,10 +28,15 @@ class Bot(commands.Bot):
 
     """ This method is called when any user sends a message """
     async def on_message(self, message):
-        await self.process_commands(message)
+        await self.process_commands(message)  # This functions checks if the message sent by user is a command
 
 
-bot = Bot(command_prefix="!", intents=intents)
+""" Intents declaration """
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+
+bot = Bot(command_prefix="!", intents_=intents)
 bot.run("MTEzMTEzNDE5ODM1NTMzNzIyNg.GqDR3u.l3cdzlr1kpvfuCv_MqHdjoLYtV8xgu3gLXiZYA")
 
 # MTEzMTEzNDE5ODM1NTMzNzIyNg.GqDR3u.l3cdzlr1kpvfuCv_MqHdjoLYtV8xgu3gLXiZYA # this token is for my test bot
