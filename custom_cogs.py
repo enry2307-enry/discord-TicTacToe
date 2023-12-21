@@ -100,7 +100,7 @@ class GameCog(commands.Cog):
         await ctx.send(self.game.get_board_formatted_string())
 
         # We start the timer to check afk players
-        self.afk_timer.start()
+        # self.afk_timer.start()
 
     @commands.command(name="lobby")
     async def lobby(self, ctx):
@@ -175,12 +175,11 @@ class GameCog(commands.Cog):
     """
 
     @tasks.loop(seconds=30)
-    async def afk_timer(self):
+    async def is_timer(self, starting_date, timer_duration):
         now = datetime.datetime.now() - datetime.timedelta(minutes=1)
-        if fabs((self.game.creation_datetime - now).total_seconds()) <= 60:
+        if fabs((starting_date - now).total_seconds()) <= timer_duration:
             pass
-            # qua metti end game
-            # poi devi fare che SIA le lobby che i game possono essere fatti in un SOLO canale alla volta
+            # here the game will someway end
 
     """
         FUNCTIONS

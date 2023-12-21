@@ -1,10 +1,15 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
+from dotenv import load_dotenv
+import os
 
 # from typing import Literal, Optional  # may be useful
 
 from custom_cogs import GeneralCog, GameCog  # for the custom cogs
+
+# loading environment variables which TOKEN is stored into
+load_dotenv()
 
 
 class Bot(commands.Bot):
@@ -36,10 +41,10 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = Bot(command_prefix="!", intents_=intents)
-bot.run("MTEzMTEzNDE5ODM1NTMzNzIyNg.GqDR3u.l3cdzlr1kpvfuCv_MqHdjoLYtV8xgu3gLXiZYA")
+TOKEN = os.getenv('TOKEN')
 
-# MTEzMTEzNDE5ODM1NTMzNzIyNg.GqDR3u.l3cdzlr1kpvfuCv_MqHdjoLYtV8xgu3gLXiZYA # this token is for my test bot
+bot = Bot(command_prefix="!", intents_=intents)
+bot.run(TOKEN)
 
 # invite link
 # https://discord.com/api/oauth2/authorize?client_id=PUBLIC_KEY&permissions=0&scope=bot%20applications.commands
