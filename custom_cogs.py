@@ -25,8 +25,7 @@ class GeneralCog(commands.Cog):
 
     @app_commands.command(name="status", description="Use this to see if the bot is online!")
     async def status(self, interaction):
-        embed = discord.Embed(title="I am online!", description="Use me for anything you need",
-                              color=self.bot.colors['success'])
+        embed = discord.Embed(title="I am online!", color=self.bot.colors['success'])
         await interaction.response.send_message(
             embed=embed
         )
@@ -38,7 +37,9 @@ class GameCog(commands.Cog):
         self.game = None
         self.lobby = Lobby()
 
-        self.channel = None  # We store the channel the game is being played in
+        self.starting_date = None  # Will store the datetime value of when the game starts. It handles afk players
+        self.akf_timer = 120  # seconds
+        self.channel = None   # We will store the channel the game is being played in
 
         self.signs = [
             ':negative_squared_cross_mark:',
@@ -55,15 +56,29 @@ class GameCog(commands.Cog):
             return
 
         if self.game:
-            embed = discord.Embed(title="Lobby is empty! ", description="Join a new one using the !join command",
+            embed = discord.Embed(title="A game is already running! ",
+                                  description="Wait for the game to finish",
                                   color=self.bot.colors['fail'])
             await ctx.send(embed=embed)
             return
 
-        user = ctx.author
+        if self.channel:
+            if self.channel != ctx.channel:
+                embed = discord.Embed(title="Games can only be played in one channel!",
+                                      description="Once you join a lobby in a channel, "
+                                                  "the game can only be played in that channel. "
+                                                  f"Lobby is current in this channel: {self.channel.mention}",
+                                      color=self.bot.colors['fail'])
+                await ctx.send(embed=embed)
+
         if id_:
             user = self.bot.get_user(int(id_))
+        else:
+            user = ctx.author
+
+        self.channel = ctx.channel  # Game can only be played in this channel
         embed = discord.Embed(title=f"***{user}*** joined the lobby!", color=self.bot.colors['success'])
+
         await ctx.send(embed=embed)
 
         self.lobby.add(
@@ -73,9 +88,20 @@ class GameCog(commands.Cog):
             )
         )
 
+        # Each time a new lobby is created, a new starting date is stored
+        if not self.starting_date:
+            self.starting_date = datetime.datetime.now()
+
+        # We start the timer to check afk players directly on lobby joining
+        if not self.is_timer.is_running():
+            self.is_timer.start()
+
         # if lobby is not ready just exit
         if not self.lobby.is_ready():
             return
+
+        # We reset timer once the game starts
+        self.starting_date = datetime.datetime.now()
 
         # if code goes here it means game is ready, we can start it
         self.game = TicTacToe(
@@ -99,12 +125,9 @@ class GameCog(commands.Cog):
         await ctx.send(embed=embed)
         await ctx.send(self.game.get_board_formatted_string())
 
-        # We start the timer to check afk players
-        # self.afk_timer.start()
-
     @commands.command(name="lobby")
     async def lobby(self, ctx):
-        # if lobby is empty we can go back
+
         if self.lobby.is_empty():
             embed = discord.Embed(title="Lobby is empty!",
                                   description="Join a new one.", color=self.bot.colors['warning'])
@@ -123,16 +146,28 @@ class GameCog(commands.Cog):
     @commands.command(name="move")
     async def move(self, ctx, position):
 
+        if not self.is_channel_valid(ctx.channel):
+            embed = discord.Embed(title="Another game is going on in another channel!",
+                                  description="Once you join a lobby in a channel, "
+                                              "the game can only be played in that channel. "
+                                              f"Lobby is current in this channel: {self.channel.mention}",
+                                  color=self.bot.colors['fail'])
+            await ctx.send(embed=embed)
+            return
+
+        # Everytime a player moves we can reset the timer
+        self.starting_date = datetime.datetime.now()
+
         # if there is no game started, we can't perform any move
         if not self.game:
             return
 
         # only the player with turn is supposed to have the rights to play
         # uncomment these lines to avoid EVERYONE moving on the board
-        """if not self.game.is_user_turn(ctx.author):
+        if not self.game.is_user_turn(ctx.author):
             embed = discord.Embed(title=f"It's not your turn!", color=self.bot.colors['fail'])
             await ctx.send(embed=embed)
-            return"""
+            return
 
         position = int(position) - 1  # we fix the array offset
         self.game.move(position)  # we execute the move
@@ -147,7 +182,7 @@ class GameCog(commands.Cog):
                                   color=self.bot.colors['white'])
             embed.set_author(name="DRAW 🫱🏽‍🫲🏻")
             await ctx.send(embed=embed)
-            
+
         await ctx.send(self.game.get_board_formatted_string())
 
         # if the game is end, we empty the game variable
@@ -174,12 +209,19 @@ class GameCog(commands.Cog):
         TASKS
     """
 
-    @tasks.loop(seconds=30)
-    async def is_timer(self, starting_date, timer_duration):
-        now = datetime.datetime.now() - datetime.timedelta(minutes=1)
-        if fabs((starting_date - now).total_seconds()) <= timer_duration:
-            pass
-            # here the game will someway end
+    @tasks.loop(seconds=40)
+    async def is_timer(self):
+
+        # If lobby is empty there is no need to check for afk players
+        if not self.lobby:
+            return
+
+        now = datetime.datetime.now()
+        if int(fabs((self.starting_date - now).total_seconds())) >= self.akf_timer:
+            embed = discord.Embed(title="Game has been interrupted due to afk players", description="Join a new lobby!",
+                                  color=self.bot.colors['fail'])
+            await self.channel.send(embed=embed)
+            self.end_game()
 
     """
         FUNCTIONS
@@ -187,4 +229,9 @@ class GameCog(commands.Cog):
     def end_game(self):
         self.game = None
         self.lobby.empty()
+        self.channel = None
+        self.is_timer.cancel()
+
+    def is_channel_valid(self, ctx_channel):
+        return True if not self.channel or self.channel == ctx_channel else False
 
