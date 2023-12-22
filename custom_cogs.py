@@ -153,19 +153,22 @@ class GameCog(commands.Cog):
         # ----------------------------------------------------
         # If you find this lines commented is because of testing. Commenting them means that I can play when it's
         # the turn of another player, which is pretty useful when building the program
-        if not self.game.is_user_turn(ctx.author):
+        """if not self.game.is_user_turn(ctx.author):
             embed = discord.Embed(title=f"It's not your turn!", color=self.bot.colors['fail'])
             await ctx.send(embed=embed)
-            return
+            return"""
         # ----------------------------------------------------
+
+        # Deleting the message just before moving. I just don't like it and it clears the chat
+        await ctx.message.delete()
 
         position = int(position) - 1  # we fix the array offset
         self.game.move(position)  # we execute the move
 
         if self.game.winner:
             embed = discord.Embed(title=f"{self.game.winner.user} WON THE GAME!",
-                                  description=f"Congrats both to {self.lobby.get_player(0)} and "
-                                              f"{self.lobby.get_player(0)}",
+                                  description=f"Congrats both to {self.lobby.get_player(0).user} and "
+                                              f"{self.lobby.get_player(1).user}",
                                   color=self.bot.colors['success'])
             embed.set_author(name="WINNER #1 🏆")
             await ctx.send(embed=embed)
@@ -183,7 +186,15 @@ class GameCog(commands.Cog):
             self.end_game()
             return
 
-        embed = discord.Embed(title=f"{self.game.get_player_turn().user}'s turn", color=self.bot.colors['success'])
+        embed = discord.Embed(
+            title=f" ‖{self.game.get_last_player_moved().sign}‖ {self.game.get_last_player_moved().user} moved △",
+            color=self.bot.colors['success']
+        )
+        await ctx.send(embed=embed)
+        embed = discord.Embed(
+            title=f"‖{self.game.get_player_turn().sign}‖ {self.game.get_player_turn().user}'s turn now! ▼",
+            color=self.bot.colors['white']
+        )
         await ctx.send(embed=embed)
 
     @commands.command(name="quit")

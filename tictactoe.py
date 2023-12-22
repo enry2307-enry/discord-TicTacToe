@@ -36,15 +36,28 @@ class TicTacToe:
     def get_player_from_sign(self, sign):
         return self.players[0] if self.players[0].sign == sign else self.players[1]
 
-    def is_user_turn(self, user):
+    def is_user_turn(self, user) -> bool:
         return True if self.get_player_turn().user == user else False
 
     def is_board_cell_empty(self, position):
         return False if self.board[position] in self.signs else True
 
-    def move(self, position):
-        # This lambda checks if the corresponding "p" cell is taken up
-        # by any sign inside self.signs
+    # Returns the last player that made a move on the board
+    def get_last_player_moved(self):
+        # The last player to move corresponds to the player who doesn't have their turn to play.
+        return self.players[
+            1 if self.turn == 0 else 0
+        ]
+
+    def get_last_sign_moved(self):
+        return self.get_last_player_moved().sign
+
+    def move(self, position) -> bool:
+        """
+
+        :param position: Value from [0; 9] representing the position on the board
+        :return: returns True if the move is performed, False if not
+        """
         player = self.get_player_turn()
 
         # if the cell is not empty we cannot perform the move
@@ -63,19 +76,24 @@ class TicTacToe:
         self.swap_signs()  # change turn
         return True
 
-    def swap_signs(self):
-        self.turn = 0 if self.turn == 1 else 1  # swapping the turn value, so makes the other player play
+    # Swapping the turn value, so makes the other player play
+    def swap_signs(self) -> None:
+        self.turn = 0 if self.turn == 1 else 1
 
-    # this function returns if the game is finished. It doesn't take action. It just tells you
-    def is_end(self):
+    # This function returns if the game is finished. It doesn't take action. It just tells you
+    def is_end(self) -> bool:
         return True if self.winner or self.draw else False
 
-    def is_draw(self):
-        # if there is no winner and if 9 moves has been executed then it means
-        # that the game is in draw
+    # This function returns if the game is draw. It doesn't take action. It just tells you
+    def is_draw(self) -> bool:
+        # if ( not winner ) and moves == 9 then it's draw
         return True if not self.winner and self.executed_moves == 9 else False
 
     def get_winner_if_win(self):
+        """
+
+        :return: Returns winner if game is finished and not drawn. Return None if anything else happens.
+        """
         sign = self.__get_turn_sign()  # we check the win for the current sign
 
         # array to store the cell's winning combinations
@@ -108,11 +126,17 @@ class TicTacToe:
         return winner
 
     # We use this function to debug the board
-    def raw_print_board(self):
+    def raw_print_board(self) -> None:
+        """
+        Prints the board on the terminal just for debug purpose
+        """
         print(self.board)
 
-    # We use this function to return the formatted string of the board
     def get_board_formatted_string(self) -> str:
+        """
+
+        :return: Returns a friendly formatted string of the board to print on discord message
+        """
         res = ''
         for i, s in enumerate(self.board):
             if i % 3 == 0:
