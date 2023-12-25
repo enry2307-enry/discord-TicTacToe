@@ -44,11 +44,11 @@ class GameCog(commands.Cog):
         ]
 
     @commands.command(name="join")
-    async def join(self, ctx, id_=None):
+    async def join(self, ctx):
 
         lobby = self.get_lobby(ctx.channel.id)
 
-        if lobby.is_user_in_lobby(ctx.author) and not id_:
+        if lobby.is_user_in_lobby(ctx.author):
             embed = discord.Embed(title="You are already in the lobby!",
                                   description="Wait for someone to join you!",
                                   color=self.bot.colors['warning'])
@@ -72,10 +72,11 @@ class GameCog(commands.Cog):
         # ---------------------------------------
         # These lines will be replaced by this line {user = ctx.author} they are only used for developing purposes.
         # Basically they allow you to test games without having to call another person. ( you play versus yourself )
-        if id_:
+        """if id_:
             user = self.bot.get_user(int(id_))
         else:
-            user = ctx.author
+            user = ctx.author"""
+        user = ctx.author
         # ---------------------------------------
 
         lobby.add(
@@ -151,10 +152,10 @@ class GameCog(commands.Cog):
         # ----------------------------------------------------
         # If you find this lines commented is because of testing. Commenting them means that I can play when it's
         # the turn of another player, which is pretty useful when building the program
-        """if not game.is_user_turn(ctx.author):
+        if not game.is_user_turn(ctx.author):
             embed = discord.Embed(title=f"It's not your turn!", color=self.bot.colors['fail'])
             await ctx.send(embed=embed)
-            return"""
+            return
         # ----------------------------------------------------
 
         # Deleting the message just before moving. I just don't like it and it clears the chat
