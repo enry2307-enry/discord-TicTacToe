@@ -33,10 +33,10 @@ class GeneralCog(commands.Cog):
 class GameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.lobbies = {}
+        self.lobbies = {}  # dictionary will store channel_id: lobby pairs
 
+        self.afk_detection.start()  # every 120 seconds afk timers
         self.afk_timer = 120  # seconds
-        self.afk_detection.start()
 
         self.signs = [
             ':negative_squared_cross_mark:',
@@ -72,10 +72,6 @@ class GameCog(commands.Cog):
         # ---------------------------------------
         # These lines will be replaced by this line {user = ctx.author} they are only used for developing purposes.
         # Basically they allow you to test games without having to call another person. ( you play versus yourself )
-        """if id_:
-            user = self.bot.get_user(int(id_))
-        else:
-            user = ctx.author"""
         user = ctx.author
         # ---------------------------------------
 
@@ -131,9 +127,6 @@ class GameCog(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        # Everytime a player moves we can reset the timer
-        # self.starting_date = datetime.datetime.now()
-
         # if there is no game started, we can't perform any move
         if not game:
             return
@@ -148,11 +141,8 @@ class GameCog(commands.Cog):
             return
         # ----------------------------------------------------
 
-        # Deleting the message just before moving. I just don't like it and it clears the chat
-        # await ctx.message.delete()
-
         position = int(position) - 1  # we fix the array offset
-        game.move(position)  # we execute the move
+        game.move(position)
 
         await ctx.send(game.get_board_formatted_string())
 
@@ -233,12 +223,11 @@ class GameCog(commands.Cog):
                 await channel.send(embed=embed)
 
     """
-        FUNCTIONS START ------------------------------------------------
+        Functions ------------------------------------------------
     """
     def end_game(self, channel_id):
         if channel_id in self.lobbies:
             self.lobbies.pop(channel_id)
-        # self.is_timer.cancel()
 
     async def start_game(self, channel, lobby):
 
@@ -261,7 +250,3 @@ class GameCog(commands.Cog):
 
     def get_lobby(self, channel_id):
         return self.lobbies[channel_id] if channel_id in self.lobbies else Lobby()
-
-    """
-        FUNCTIONS END ------------------------------------------------
-    """
