@@ -1,14 +1,11 @@
 
 # Discord TicTacToe BOT
-I am creating this Discord bot to play TicTacToe!
+Hello, this is the source code of a Discord Python Bot developed using discord.py library. 
+This bot is meant to make you play TicTacToe games on a discord server 1vs1 with easy commands and a friendly UI.
 
 ## Features
- - Lobbies of maximum of two players: you can quit anytime the lobby.
+ - Lobbies
  - Friendly UI ( discord messages with emdeds )
- - AFK Timer: when atleast 1 player is afk during the game for atleast two minutes the game gets canceled. The same happens when there's only one player in the lobby: if he waits for atleast two minutes lobby gets reset.
-### Limitations and future updates
- - Games can only be played in one server and in one channel per time
- - I have no host either budget to put the bot online
- - Using interactions only instead of commands
+ - AFK Timer ( triggers around 2 minutes of inactivity )
+ - Play one game per channel
 
-Feel free to help if you would like it!
