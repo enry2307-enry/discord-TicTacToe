@@ -83,7 +83,7 @@ class GameCog(commands.Cog):
         )
 
         # Print out to let user know that he joined the lobby
-        embed = discord.Embed(title=f"***{user}*** joined the lobby! ({str(lobby.size())}/2)",
+        embed = discord.Embed(title=f"***{user.display_name}*** joined the lobby! ({str(lobby.size())}/2)",
                               color=self.bot.colors['success'])
         await ctx.send(embed=embed)
 
@@ -111,7 +111,7 @@ class GameCog(commands.Cog):
                               description="The players currently inside the lobby are as follows!",
                               color=self.bot.colors['white'])
         for i, p in enumerate(players):
-            embed.add_field(name=f"Player #{i+1}", value=f"{p.user.name}", inline=False)
+            embed.add_field(name=f"Player #{i+1}", value=f"{p.user.display_name}", inline=False)
 
         await ctx.send(embed=embed)
 
@@ -147,7 +147,7 @@ class GameCog(commands.Cog):
         await ctx.send(game.get_board_formatted_string())
 
         embed = discord.Embed(
-            title=f" ‖{game.get_last_player_moved().sign}‖ {game.get_last_player_moved().user} moved △",
+            title=f" ‖{game.get_last_player_moved().sign}‖ {game.get_last_player_moved().user.display_name} moved △",
             color=self.bot.colors['success']
         )
         await ctx.send(embed=embed)
@@ -159,8 +159,8 @@ class GameCog(commands.Cog):
             # Just output
             if game.winner:
                 embed = discord.Embed(title=f"{game.winner.user} WON THE GAME!",
-                                      description=f"Congrats both to {lobby.get_player(0).user} and "
-                                                  f"{lobby.get_player(1).user}",
+                                      description=f"Congrats both to {lobby.get_player(0).user.display_name} and "
+                                                  f"{lobby.get_player(1).user.display_name}",
                                       color=self.bot.colors['success'])
                 embed.set_author(name="WINNER #1 🏆")
                 await ctx.send(embed=embed)
@@ -177,7 +177,7 @@ class GameCog(commands.Cog):
         # If code reaches this point it means game is still going on
 
         embed = discord.Embed(
-            title=f"‖{game.get_player_turn().sign}‖ {game.get_player_turn().user}'s turn now! ▼",
+            title=f"‖{game.get_player_turn().sign}‖ {game.get_player_turn().user.display_name}'s turn now! ▼",
             color=self.bot.colors['white']
         )
         await ctx.send(embed=embed)
@@ -235,15 +235,15 @@ class GameCog(commands.Cog):
         game = lobby.start_game()
 
         # UI stuff to show that the game is starting
-        embed = discord.Embed(title=f"{game.get_player_turn().user}'s turn",
+        embed = discord.Embed(title=f"{game.get_player_turn().user.display_name}'s turn",
                               description="These are the rivals!", color=self.bot.colors['success'])
         embed.set_author(name="Game is started")
         embed.set_footer(text="The game can last a maximum of 2 minutes due to bandwidth limitations. \n"
                               f"Use \"{self.bot.command_prefix}move N\" (without quotes) where N is the number "
                               f"you want to place your sign to. E.g. {self.bot.command_prefix}move 1")
         players = lobby.get_players()
-        embed.add_field(name=str(players[0].user), value=players[0].sign, inline=True)
-        embed.add_field(name=str(players[1].user), value=players[1].sign, inline=True)
+        embed.add_field(name=str(players[0].user.display_name), value=players[0].sign, inline=True)
+        embed.add_field(name=str(players[1].user.display_name), value=players[1].sign, inline=True)
 
         await channel.send(embed=embed)
         await channel.send(game.get_board_formatted_string())

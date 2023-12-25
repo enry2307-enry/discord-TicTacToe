@@ -94,7 +94,7 @@ class TicTacToe:
         sign = self.__get_turn_sign()  # we check the win for the current sign
 
         # array to store the cell's winning combinations
-        WINNING_C = [
+        winning_combinations = [
             [0, 1, 2],
             [3, 4, 5],
             [6, 7, 8],
@@ -107,7 +107,7 @@ class TicTacToe:
             [2, 4, 6]
         ]
         winning_sign = None
-        for combination in WINNING_C:
+        for combination in winning_combinations:
             win = True
             for cell in combination:
                 if sign not in self.board[cell]:

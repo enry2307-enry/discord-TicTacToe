@@ -3,10 +3,8 @@ from discord.ext import commands
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-
-# from typing import Literal, Optional  # may be useful
-
-from custom_cogs import GeneralCog, GameCog  # for the custom cogs
+# Custom import
+from custom_cogs import GeneralCog, GameCog
 
 # loading environment variables which TOKEN is stored into
 load_dotenv()
@@ -47,4 +45,4 @@ bot = Bot(command_prefix="!", intents_=intents)
 bot.run(TOKEN)
 
 # invite link
-# https://discord.com/api/oauth2/authorize?client_id=PUBLIC_KEY&permissions=0&scope=bot%20applications.commands
+# https://discord.com/api/oauth2/authorize?client_id=APPLICATION_ID&permissions=0&scope=bot%20applications.commands
