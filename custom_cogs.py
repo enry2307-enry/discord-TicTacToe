@@ -6,7 +6,6 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from discord.ext.commands import Greedy, Range
 
-from tictactoe import TicTacToe
 from player import Player
 from lobby import Lobby
 
@@ -34,12 +33,10 @@ class GeneralCog(commands.Cog):
 class GameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.games = {}
         self.lobbies = {}
 
-        self.starting_date = None  # Will store the datetime value of when the game starts. It handles afk players
-        self.akf_timer = 120  # seconds
-        self.channel = None   # We will store the channel the game is being played in
+        self.afk_timer = 120  # seconds
+        self.afk_detection.start()
 
         self.signs = [
             ':negative_squared_cross_mark:',
@@ -49,7 +46,6 @@ class GameCog(commands.Cog):
     @commands.command(name="join")
     async def join(self, ctx, id_=None):
 
-        game = self.get_game(ctx.channel.id)
         lobby = self.get_lobby(ctx.channel.id)
 
         if lobby.is_user_in_lobby(ctx.author) and not id_:
@@ -59,7 +55,7 @@ class GameCog(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        if game:
+        if lobby.game:
             embed = discord.Embed(title="A game is already running! ",
                                   description="Wait for the game to finish",
                                   color=self.bot.colors['fail'])
@@ -135,7 +131,7 @@ class GameCog(commands.Cog):
     @commands.command(name="move")
     async def move(self, ctx, position: Range[int, 1, 9]):
         lobby = self.get_lobby(ctx.channel.id)
-        game = self.get_game(ctx.channel.id)
+        game = lobby.game
 
         if not lobby.is_user_in_lobby(ctx.author):
             embed = discord.Embed(title="You are not in the current game!",
@@ -167,37 +163,46 @@ class GameCog(commands.Cog):
         position = int(position) - 1  # we fix the array offset
         game.move(position)  # we execute the move
 
-        if game.winner:
-            embed = discord.Embed(title=f"{game.winner.user} WON THE GAME!",
-                                  description=f"Congrats both to {lobby.get_player(0).user} and "
-                                              f"{lobby.get_player(1).user}",
-                                  color=self.bot.colors['success'])
-            embed.set_author(name="WINNER #1 🏆")
-            await ctx.send(embed=embed)
-
-        if game.draw:
-            embed = discord.Embed(title=f"The game ends in a draw!", description='There is no winner in this the game',
-                                  color=self.bot.colors['white'])
-            embed.set_author(name="DRAW 🫱🏽‍🫲🏻")
-            await ctx.send(embed=embed)
-
         await ctx.send(game.get_board_formatted_string())
-
-        # if the game is end, we empty the game variable
-        if game.end:
-            self.end_game(ctx.channel.id)
-            return
 
         embed = discord.Embed(
             title=f" ‖{game.get_last_player_moved().sign}‖ {game.get_last_player_moved().user} moved △",
             color=self.bot.colors['success']
         )
         await ctx.send(embed=embed)
+
+        if game.end:
+            # Canceling the actual game
+            self.end_game(ctx.channel.id)
+
+            # Just output
+            if game.winner:
+                embed = discord.Embed(title=f"{game.winner.user} WON THE GAME!",
+                                      description=f"Congrats both to {lobby.get_player(0).user} and "
+                                                  f"{lobby.get_player(1).user}",
+                                      color=self.bot.colors['success'])
+                embed.set_author(name="WINNER #1 🏆")
+                await ctx.send(embed=embed)
+
+            elif game.draw:
+                embed = discord.Embed(title=f"The game ends in a draw!",
+                                      description='There is no winner in this the game',
+                                      color=self.bot.colors['white'])
+                embed.set_author(name="DRAW 🫱🏽‍🫲🏻")
+                await ctx.send(embed=embed)
+
+            return
+
+        # If code reaches this point it means game is still going on
+
         embed = discord.Embed(
             title=f"‖{game.get_player_turn().sign}‖ {game.get_player_turn().user}'s turn now! ▼",
             color=self.bot.colors['white']
         )
         await ctx.send(embed=embed)
+
+        # game is a local variable. We save to lobby the changes made to the game object
+        lobby.update_game(game)
 
     @commands.command(name="quit")
     async def quit(self, ctx):
@@ -217,45 +222,40 @@ class GameCog(commands.Cog):
         TASKS
     """
 
-    @tasks.loop(seconds=40)
-    async def is_timer(self):
+    @tasks.loop(seconds=30)
+    async def afk_detection(self):
 
-        # If lobby is empty there is no need to check for afk players
-        if not self.lobby:
+        # If there are no lobbies there is no need to check for afk
+        if not self.lobbies:
             return
 
         now = datetime.datetime.now()
-        if int(fabs((self.starting_date - now).total_seconds())) >= self.akf_timer:
-            embed = discord.Embed(title="Game has been interrupted due to afk players", description="Join a new lobby!",
-                                  color=self.bot.colors['fail'])
-            await self.channel.send(embed=embed)
-            # self.end_game(ctx.channel.id)
+        for channel_id, lobby in dict(self.lobbies).items():
+            print(f'[{channel_id}] -> {int(fabs((lobby.updated_time - now).total_seconds()))} >= {self.afk_timer} ???')
+            if int(fabs((lobby.updated_time - now).total_seconds())) >= self.afk_timer:
+                embed = discord.Embed(title="Game has been interrupted due to afk players",
+                                      description="Join a new lobby!",
+                                      color=self.bot.colors['fail'])
+
+                self.end_game(channel_id)
+                channel = self.bot.get_channel(channel_id)
+                await channel.send(embed=embed)
+
+
+
 
     """
         FUNCTIONS
     """
     def end_game(self, channel_id):
-        if channel_id in self.games:
-            self.games.pop(channel_id)
         if channel_id in self.lobbies:
             self.lobbies.pop(channel_id)
         # self.is_timer.cancel()
 
-    """def is_channel_valid(self, ctx_channel):
-        return True if not self.channel or self.channel == ctx_channel else False"""
-
     async def start_game(self, channel, lobby):
-        # We reset timer once the game starts
-        self.starting_date = datetime.datetime.now()
 
         # Actually starting the game
-        game = TicTacToe(
-            lobby,
-            empty_board=[':one:', ':two:', ':three:', ':four:',
-                         ':five:', ':six:', ':seven:', ':eight:', ':nine:']
-        )
-        # Saving the game
-        self.games[channel.id] = game
+        game = lobby.start_game()
 
         # UI stuff to show that the game is starting
         embed = discord.Embed(title=f"{game.get_player_turn().user}'s turn",
@@ -273,7 +273,4 @@ class GameCog(commands.Cog):
 
     def get_lobby(self, channel_id):
         return self.lobbies[channel_id] if channel_id in self.lobbies else Lobby()
-
-    def get_game(self, channel_id):
-        return self.games[channel_id] if channel_id in self.games else None
 
