@@ -91,22 +91,12 @@ class GameCog(commands.Cog):
                               color=self.bot.colors['success'])
         await ctx.send(embed=embed)
 
-        # Saving the lobby paired with channel id
+        # Saving the lobby paired with its channel id
         self.lobbies[ctx.channel.id] = lobby
 
-        # Each time a new lobby is created, a new starting date is stored
-        """if not self.starting_date:
-            self.starting_date = datetime.datetime.now()"""
-
-        # We start the timer to check afk players directly on lobby joining
-        """if not self.is_timer.is_running():
-            self.is_timer.start()"""
-
-        # if lobby is not ready just exit
         if not lobby.is_ready():
             return
 
-        # Starting the game
         await self.start_game(ctx.channel, lobby)
 
     @commands.command(name="lobby")
@@ -242,11 +232,8 @@ class GameCog(commands.Cog):
                 channel = self.bot.get_channel(channel_id)
                 await channel.send(embed=embed)
 
-
-
-
     """
-        FUNCTIONS
+        FUNCTIONS START ------------------------------------------------
     """
     def end_game(self, channel_id):
         if channel_id in self.lobbies:
@@ -275,3 +262,6 @@ class GameCog(commands.Cog):
     def get_lobby(self, channel_id):
         return self.lobbies[channel_id] if channel_id in self.lobbies else Lobby()
 
+    """
+        FUNCTIONS END ------------------------------------------------
+    """
