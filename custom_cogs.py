@@ -212,7 +212,6 @@ class GameCog(commands.Cog):
 
         now = datetime.datetime.now()
         for channel_id, lobby in dict(self.lobbies).items():
-            print(f'[{channel_id}] -> {int(fabs((lobby.updated_time - now).total_seconds()))} >= {self.afk_timer} ???')
             if int(fabs((lobby.updated_time - now).total_seconds())) >= self.afk_timer:
                 embed = discord.Embed(title="Game has been interrupted due to afk players",
                                       description="Join a new lobby!",
