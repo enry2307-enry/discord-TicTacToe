@@ -158,7 +158,7 @@ class GameCog(commands.Cog):
 
             # Just output
             if game.winner:
-                embed = discord.Embed(title=f"{game.winner.user} WON THE GAME!",
+                embed = discord.Embed(title=f"{game.winner.user.display_name} WON THE GAME!",
                                       description=f"Congrats both to {lobby.get_player(0).user.display_name} and "
                                                   f"{lobby.get_player(1).user.display_name}",
                                       color=self.bot.colors['success'])
