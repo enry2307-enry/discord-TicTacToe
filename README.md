@@ -5,7 +5,8 @@ This bot is meant to make you play TicTacToe games on a discord server 1vs1 with
 
 ## Features
  - Lobbies
- - Friendly UI ( discord messages with emdeds )
- - AFK Timer ( triggers around 2 minutes of inactivity )
- - Play one game per channel
+ - ```[ NEW ]``` Friendly UI ( discord messages with emdeds )
+ - ```[ NEW ]``` AFK Timer ( triggers around 2 minutes of inactivity )
+ - ```[ NEW ]``` Play one game per channel
+
 
